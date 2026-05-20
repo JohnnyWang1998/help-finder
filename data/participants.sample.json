@@ -1,0 +1,44 @@
+[
+  {
+    "githubHandle": "bme3412",
+    "name": "Brendan Erhard",
+    "avatarUrl": "https://github.com/bme3412.png",
+    "repoUrl": "https://github.com/bme3412/boston-cursor-week-1",
+    "liveUrl": "https://boston-cursor-week-1.vercel.app",
+    "pitch": "Launchpad — a cohort feed for builders to share progress.",
+    "summary": "Next.js feed showing PRs and ship updates with auth.",
+    "techStack": ["Next.js", "React", "TypeScript", "Tailwind", "Shadcn"],
+    "languages": { "TypeScript": 199886, "CSS": 4368 },
+    "lastCommitAt": "2026-05-19T14:30:00Z",
+    "commitsLast7d": 23,
+    "repoPrivate": false
+  },
+  {
+    "githubHandle": "alaska-lam",
+    "name": "Alaska Lam",
+    "avatarUrl": "https://github.com/alaska-lam.png",
+    "repoUrl": "https://github.com/alaska-lam/cohort-dashboard",
+    "liveUrl": "",
+    "pitch": "Streamlit dashboard for cohort analytics.",
+    "summary": "Interactive Streamlit app with Plotly charts for submission stats.",
+    "techStack": ["Python", "Streamlit", "Plotly"],
+    "languages": { "Python": 12400 },
+    "lastCommitAt": "2026-05-18T09:15:00Z",
+    "commitsLast7d": 8,
+    "repoPrivate": false
+  },
+  {
+    "githubHandle": "private-builder",
+    "name": "Private Builder",
+    "avatarUrl": "https://github.com/private-builder.png",
+    "repoUrl": "https://github.com/private-builder/secret-app",
+    "liveUrl": "",
+    "pitch": "WIP project — repo is private.",
+    "summary": "",
+    "techStack": [],
+    "languages": {},
+    "lastCommitAt": "",
+    "commitsLast7d": 0,
+    "repoPrivate": true
+  }
+]

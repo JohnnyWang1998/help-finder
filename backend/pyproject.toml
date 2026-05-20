@@ -1,0 +1,31 @@
+[project]
+name = "help-finder"
+version = "0.1.0"
+description = "Cohort help finder — ingest pipeline and Discord bot"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "rapidfuzz>=3.9.0",
+    "groq>=0.11.0",
+    "discord.py>=2.4.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: hits live GitHub API (requires GITHUB_TOKEN)",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["help_finder*"]
