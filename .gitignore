@@ -1,0 +1,39 @@
+# --- Secrets & local config ---
+.env
+.env.*
+!.env.example
+
+# --- Generated data (ingest pipeline) ---
+data/participants.json
+data/cache/
+
+# --- Python (backend) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+.hypothesis/
+
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# --- Frontend (Next.js; when added) ---
+node_modules/
+.next/
+out/
+.vercel
+
+# --- OS & editors ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
