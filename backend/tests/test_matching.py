@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 from help_finder.matching import (
     normalize_query,
+    query_tokens,
     rank_by_stack_overlap,
     rank_participants,
     resolve_search_query,
@@ -27,6 +28,14 @@ def test_rank_participants_empty_query(sample_participants):
 def test_normalize_query_synonyms():
     assert "javascript" in normalize_query("js react")
     assert "next.js" in normalize_query("next app")
+
+
+def test_query_tokens_synonyms():
+    assert query_tokens("js react") == ["javascript", "react"]
+
+
+def test_rank_participants_rust_no_false_matches(sample_participants):
+    assert rank_participants("rust", sample_participants, limit=3) == []
 
 
 def test_resolve_search_query_uses_llm():

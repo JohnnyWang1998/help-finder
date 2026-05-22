@@ -43,8 +43,16 @@ def format_help_reply(
     ranked: list[RankedParticipant],
     *,
     dashboard_base_url: str,
+    topic: str = "",
 ) -> str:
     if not ranked:
+        topic = topic.strip()
+        if topic:
+            return (
+                f"No cohort members list **{topic}** in their tech stack. "
+                "Try another tech (e.g. `react`, `streamlit`, `python`) or run "
+                "`python ingest.py` to refresh data."
+            )
         return "No matches found. Try a tech name like `react` or `streamlit`."
 
     lines: list[str] = []
@@ -132,7 +140,9 @@ def run_bot() -> None:
             )
             return
         ranked = rank_participants(topic, participants, limit=3, llm=llm_client)
-        message = format_help_reply(ranked, dashboard_base_url=dashboard_base)
+        message = format_help_reply(
+            ranked, dashboard_base_url=dashboard_base, topic=topic
+        )
         await interaction.response.send_message(message)
 
     @tree.command(
