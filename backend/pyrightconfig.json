@@ -1,0 +1,4 @@
+{
+  "include": ["help_finder", "tests", "ingest.py", "bot.py"],
+  "extraPaths": ["."]
+}

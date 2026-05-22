@@ -1,0 +1,7 @@
+{
+  "githubHandle": "testuser",
+  "name": "Test User",
+  "repoUrl": "https://github.com/testuser/my-repo",
+  "liveUrl": "https://my-repo.example.com",
+  "pitch": "A test project for the cohort."
+}

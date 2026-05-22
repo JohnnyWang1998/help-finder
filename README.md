@@ -34,6 +34,14 @@ npm install
 npm run dev
 ```
 
+## Data
+
+- **Schema:** see [TICKETS.md](./TICKETS.md) (locked for frontend/backend)
+- **Day 1 mock:** `data/participants.sample.json` (3 entries)
+- **Generated:** `data/participants.json` from `cd backend && python ingest.py` (gitignored)
+
+Backend details: [backend/README.md](./backend/README.md)
+
 ## Tickets
 
 See [TICKETS.md](./TICKETS.md) for the full task breakdown and merge schedule.
