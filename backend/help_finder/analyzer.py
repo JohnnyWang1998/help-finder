@@ -131,20 +131,22 @@ def build_tech_stack(
 def _collect_manifest_deps(
     client: GitHubClientProtocol, owner: str, repo: str
 ) -> list[str]:
+    """Fetch manifest files; stop early when deps found to reduce API calls."""
     deps: list[str] = []
-    get_file = getattr(client, "get_repo_file", None)
-    if not get_file:
-        return deps
 
-    package_json = get_file(owner, repo, "package.json")
+    package_json = client.get_repo_file(owner, repo, "package.json")
     if package_json:
         deps.extend(_extract_deps_from_package_json(package_json))
+        if deps:
+            return deps
 
-    requirements = get_file(owner, repo, "requirements.txt")
+    requirements = client.get_repo_file(owner, repo, "requirements.txt")
     if requirements:
         deps.extend(_extract_deps_from_requirements(requirements))
+        if deps:
+            return deps
 
-    pyproject = get_file(owner, repo, "pyproject.toml")
+    pyproject = client.get_repo_file(owner, repo, "pyproject.toml")
     if pyproject:
         deps.extend(_extract_deps_from_pyproject(pyproject))
 

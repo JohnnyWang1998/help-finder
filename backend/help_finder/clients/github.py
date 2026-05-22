@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 from datetime import datetime, timezone
 from typing import Any, Protocol, runtime_checkable
 from urllib.parse import urlparse
@@ -19,6 +20,34 @@ class GitHubApiError(Exception):
     def __init__(self, status_code: int, message: str = "") -> None:
         self.status_code = status_code
         super().__init__(message or f"GitHub API error {status_code}")
+
+
+def _retry_after_seconds(response: httpx.Response) -> float:
+    """Seconds to wait before retrying after a rate-limit response."""
+    retry_after = response.headers.get("Retry-After")
+    if retry_after:
+        try:
+            return max(1.0, float(retry_after))
+        except ValueError:
+            pass
+    reset = response.headers.get("X-RateLimit-Reset")
+    if reset:
+        try:
+            wait = int(reset) - time.time() + 1
+            return max(1.0, min(wait, 120.0))
+        except ValueError:
+            pass
+    return 60.0
+
+
+def _is_rate_limited(response: httpx.Response) -> bool:
+    if response.status_code != 403:
+        return False
+    remaining = response.headers.get("x-ratelimit-remaining")
+    if remaining == "0":
+        return True
+    body = response.text.lower()
+    return "rate limit" in body
 
 
 @runtime_checkable
@@ -58,7 +87,12 @@ class GitHubClient:
         headers = {"Accept": "application/vnd.github+json"}
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        self._client = httpx.Client(base_url=API_BASE, headers=headers, timeout=30.0)
+        self._client = httpx.Client(
+            base_url=API_BASE,
+            headers=headers,
+            timeout=30.0,
+            follow_redirects=True,
+        )
 
     def close(self) -> None:
         self._client.close()
@@ -70,11 +104,29 @@ class GitHubClient:
         self.close()
 
     def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        response = self._client.get(path, params=params)
-        if response.status_code == 404:
-            raise GitHubApiError(404)
-        response.raise_for_status()
-        return response.json()
+        max_retries = 5
+        for attempt in range(max_retries):
+            response = self._client.get(path, params=params)
+            if response.status_code == 404:
+                raise GitHubApiError(404)
+            if _is_rate_limited(response):
+                if attempt < max_retries - 1:
+                    wait = _retry_after_seconds(response)
+                    print(
+                        f"GitHub rate limit hit, waiting {int(wait)}s "
+                        f"(retry {attempt + 1}/{max_retries - 1})...",
+                        flush=True,
+                    )
+                    time.sleep(wait)
+                    continue
+                raise GitHubApiError(
+                    403,
+                    "GitHub API rate limit exceeded. "
+                    "Set GITHUB_TOKEN in backend/.env and retry in a few minutes.",
+                )
+            response.raise_for_status()
+            return response.json()
+        raise GitHubApiError(403, "GitHub API rate limit exceeded")
 
     def list_submission_files(self) -> list[str]:
         data = self._get(

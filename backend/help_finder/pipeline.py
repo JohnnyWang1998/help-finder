@@ -43,6 +43,12 @@ def run_ingest(
         cache = cache_dir
 
     token = os.environ.get("GITHUB_TOKEN", "").strip()
+    if not token and github is None:
+        print(
+            "Warning: GITHUB_TOKEN not set — ingest will hit rate limits quickly. "
+            "Add it to backend/.env",
+            flush=True,
+        )
     owns_client = github is None
     client = github or GitHubClient(token=token or None)
     llm_client = llm if llm is not None else build_llm_client()

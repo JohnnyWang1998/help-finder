@@ -9,7 +9,8 @@ import discord
 from discord import app_commands
 from dotenv import load_dotenv
 
-from help_finder.matching import rank_participants
+from help_finder.clients.llm import LlmClientProtocol, build_llm_client
+from help_finder.matching import rank_by_stack_overlap, rank_participants
 from help_finder.models import Participant, RankedParticipant
 from help_finder.pipeline import default_paths
 
@@ -60,8 +61,33 @@ def format_help_reply(
     return "\n\n".join(lines)
 
 
+def format_peers_reply(
+    ranked: list[RankedParticipant],
+    *,
+    reference_handle: str,
+    dashboard_base_url: str,
+) -> str:
+    if not ranked:
+        return (
+            f"No stack overlap found for `@{reference_handle}`. "
+            "Check the handle or run `python ingest.py`."
+        )
+
+    lines: list[str] = [f"**Peers like @{reference_handle}** (by shared stack)\n"]
+    for i, item in enumerate(ranked, start=1):
+        p = item.participant
+        pct = int(item.score)
+        stack = ", ".join(p.techStack[:6]) or "unknown stack"
+        dash = f"{dashboard_base_url.rstrip('/')}?highlight={p.githubHandle}"
+        lines.append(
+            f"**{i}. {p.name}** (@{p.githubHandle}) — **{pct}%** overlap\n"
+            f"Stack: {stack} · [Dashboard]({dash})"
+        )
+    return "\n\n".join(lines)
+
+
 def run_bot() -> None:
-    """Start Discord bot with /help slash command."""
+    """Start Discord bot with /help and /peers slash commands."""
     load_dotenv()
     token = os.environ.get("DISCORD_BOT_TOKEN", "").strip()
     if not token:
@@ -69,6 +95,7 @@ def run_bot() -> None:
 
     dashboard_base = os.environ.get("DASHBOARD_BASE_URL", "http://localhost:3000")
     out_path, _, _ = default_paths()
+    llm_client: LlmClientProtocol | None = build_llm_client()
 
     intents = discord.Intents.default()
     client = discord.Client(intents=intents)
@@ -90,10 +117,12 @@ def run_bot() -> None:
     @client.event
     async def on_ready() -> None:
         await tree.sync()
-        print(f"Logged in as {client.user} (synced /help)")
+        print(f"Logged in as {client.user} (synced /help, /peers)")
 
     @tree.command(name="help", description="Find cohort members who can help with a topic")
-    @app_commands.describe(topic="Tech or topic, e.g. streamlit, react, supabase")
+    @app_commands.describe(
+        topic="Tech or topic, e.g. streamlit, react, or 'stuck on auth with supabase'"
+    )
     async def help_command(interaction: discord.Interaction, topic: str) -> None:
         participants = refresh_participants()
         if not participants:
@@ -102,8 +131,30 @@ def run_bot() -> None:
                 ephemeral=True,
             )
             return
-        ranked = rank_participants(topic, participants, limit=3)
+        ranked = rank_participants(topic, participants, limit=3, llm=llm_client)
         message = format_help_reply(ranked, dashboard_base_url=dashboard_base)
+        await interaction.response.send_message(message)
+
+    @tree.command(
+        name="peers",
+        description="Find cohort members with the most similar tech stack to you",
+    )
+    @app_commands.describe(github_handle="Your GitHub handle, e.g. bme3412")
+    async def peers_command(interaction: discord.Interaction, github_handle: str) -> None:
+        participants = refresh_participants()
+        if not participants:
+            await interaction.response.send_message(
+                "No participant data loaded. Run `python ingest.py` first.",
+                ephemeral=True,
+            )
+            return
+        handle = github_handle.strip().lstrip("@")
+        ranked = rank_by_stack_overlap(handle, participants, limit=5)
+        message = format_peers_reply(
+            ranked,
+            reference_handle=handle,
+            dashboard_base_url=dashboard_base,
+        )
         await interaction.response.send_message(message)
 
     client.run(token)

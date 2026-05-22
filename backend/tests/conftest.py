@@ -34,7 +34,7 @@ def sample_participants() -> list[Participant]:
             liveUrl="",
             pitch="Streamlit dashboard",
             summary="Analytics with Streamlit",
-            techStack=["Python", "Streamlit", "Plotly"],
+            techStack=["Python", "Streamlit", "Plotly", "TypeScript"],
             languages={"Python": 1000},
             lastCommitAt="2026-05-18T09:15:00Z",
             commitsLast7d=5,

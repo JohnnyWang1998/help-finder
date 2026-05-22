@@ -21,6 +21,7 @@ pythonpath = ["."]
 markers = [
     "integration: hits live GitHub API (requires GITHUB_TOKEN)",
 ]
+addopts = ["-m", "not integration"]
 
 [build-system]
 requires = ["setuptools>=68"]

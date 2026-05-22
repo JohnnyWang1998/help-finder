@@ -35,10 +35,11 @@ cp .env.example .env   # set GITHUB_TOKEN
 ## Commands
 
 ```bash
-python ingest.py       # scrape → analyze → summarize → write ../data/participants.json
-python bot.py          # Discord /help bot (needs DISCORD_BOT_TOKEN + participants.json)
-pytest                 # unit tests
-pytest -m integration  # live GitHub (needs GITHUB_TOKEN)
+python scrape_submissions.py  # fetch submission JSON stubs (A2; needs GITHUB_TOKEN)
+python ingest.py              # scrape → analyze → summarize → write ../data/participants.json
+python bot.py                 # Discord /help and /peers (needs DISCORD_BOT_TOKEN)
+pytest                        # unit tests (skips integration by default)
+pytest -m integration         # live GitHub ingest (needs GITHUB_TOKEN)
 ```
 
 ## Package layout
@@ -50,5 +51,6 @@ pytest -m integration  # live GitHub (needs GITHUB_TOKEN)
 - `help_finder/activity.py` — commit activity
 - `help_finder/matching.py` — fuzzy rank (shared with bot)
 - `help_finder/pipeline.py` — orchestration
-- `help_finder/discord_app.py` — slash `/help`
+- `help_finder/discord_app.py` — slash `/help` and `/peers`
+- `help_finder/matching.py` — fuzzy rank, stack overlap, query normalization
 - `help_finder/clients/` — GitHub + LLM protocols and implementations

@@ -12,16 +12,22 @@ class LlmClientProtocol(Protocol):
     def summarize(self, prompt: str) -> str:
         """Input: prompt text. Output: one-line summary string."""
 
+    def parse_search_query(self, query: str) -> str:
+        """Input: natural-language or messy query. Output: concise tech search terms."""
+
 
 class NoOpLlmClient:
-    """Does not call an API — caller should use fallback_summary instead."""
+    """Test double — no API calls."""
 
     def summarize(self, prompt: str) -> str:
         raise NotImplementedError("NoOpLlmClient does not summarize; use fallback_summary")
 
+    def parse_search_query(self, query: str) -> str:
+        return query.strip()
+
 
 class GroqClient:
-    """Groq free-tier client for README summarization."""
+    """Groq free-tier client for README summarization and query parsing."""
 
     def __init__(self, api_key: str | None = None) -> None:
         self._api_key = api_key or os.environ.get("GROQ_API_KEY", "")
@@ -52,6 +58,27 @@ class GroqClient:
             ],
             max_tokens=80,
             temperature=0.3,
+        )
+        return (response.choices[0].message.content or "").strip()
+
+    def parse_search_query(self, query: str) -> str:
+        """Tier 2: extract tech keywords from natural-language help requests."""
+        client = self._ensure_client()
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Extract technology names from the user message for matching "
+                        "cohort builders. Reply with only 1-4 comma-separated tech terms "
+                        "(e.g. streamlit, next.js, supabase). No explanation."
+                    ),
+                },
+                {"role": "user", "content": query[:500]},
+            ],
+            max_tokens=40,
+            temperature=0.2,
         )
         return (response.choices[0].message.content or "").strip()
 
